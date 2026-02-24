@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>元素星際挑戰賽</title>
+    <title>元素星際挑戰賽 - 分段學習版</title>
     <style>
         :root {
             --bg-dark: #1a1a2e;
@@ -16,211 +16,184 @@
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             background: var(--bg-dark);
             color: var(--text-white);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0;
         }
-        /* 星空背景裝飾 */
-        body::before {
-            content: "";
-            position: absolute;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #233142 0%, #1a1a2e 100%);
-            z-index: -1;
-        }
-
-        .game-container {
-            background: var(--card-bg);
-            width: 90%;
-            max-width: 450px;
-            padding: 30px;
-            border-radius: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            text-align: center;
+        .container {
+            background: var(--card-bg); width: 90%; max-width: 480px; padding: 30px;
+            border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center;
             border: 2px solid #0f3460;
         }
+        #menu-screen, #game-screen { display: none; }
+        #menu-screen.active, #game-screen.active { display: block; }
 
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #0f3460;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            overflow: hidden;
+        h1 { color: var(--accent-blue); margin-bottom: 30px; }
+        .mode-btn {
+            width: 100%; padding: 15px; margin: 10px 0; font-size: 1.2rem;
+            background: #0f3460; color: white; border: none; border-radius: 15px;
+            cursor: pointer; transition: 0.3s;
         }
-        #progress-fill {
-            width: 10%;
-            height: 100%;
-            background: var(--accent-blue);
-            transition: width 0.3s;
-        }
+        .mode-btn:hover { background: var(--accent-blue); transform: scale(1.02); }
 
-        .question-box {
-            min-height: 140px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-        }
+        .progress-bar { width: 100%; height: 8px; background: #0f3460; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        #progress-fill { width: 0%; height: 100%; background: var(--accent-blue); transition: width 0.3s; }
 
-        .element-title {
-            font-size: 1.8rem;
-            color: var(--accent-yellow);
-            margin-bottom: 10px;
-            font-weight: bold;
-            text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
-        }
+        .question-box { min-height: 150px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; margin-bottom: 25px; }
+        .element-title { font-size: 2.2rem; color: var(--accent-yellow); margin-bottom: 10px; font-weight: bold; }
+        .question-text { font-size: 1.1rem; line-height: 1.6; color: #bdc3c7; }
 
-        .question-text {
-            font-size: 1.1rem;
-            line-height: 1.5;
-            color: #bdc3c7;
-        }
-
-        .options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .btn {
-            padding: 20px;
-            font-size: 2.2rem;
-            font-weight: 800;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            background: #0f3460;
-            color: var(--text-white);
-            transition: all 0.2s;
-            box-shadow: 0 5px 0 #08203e;
+            padding: 20px; font-size: 2.5rem; font-weight: 800; border: none; border-radius: 20px;
+            cursor: pointer; background: #0f3460; color: white; transition: 0.2s; box-shadow: 0 5px 0 #08203e;
         }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            background: #1a4b8c;
-        }
-
-        .btn:active {
-            transform: translateY(3px);
-            box-shadow: none;
-        }
-
         .btn.correct { background: #27ae60 !important; box-shadow: 0 5px 0 #1e8449; }
         .btn.wrong { background: #e74c3c !important; box-shadow: 0 5px 0 #c0392b; animation: shake 0.4s; }
-
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-
-        .score-info {
-            margin-top: 25px;
-            font-size: 1rem;
-            color: var(--accent-blue);
-            letter-spacing: 2px;
-        }
+        
+        .score-info { margin-top: 25px; font-size: 1.1rem; color: var(--accent-blue); }
+        .back-btn { margin-top: 20px; background: none; border: 1px solid #444; color: #888; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <div class="progress-bar"><div id="progress-fill"></div></div>
-        
-        <div class="question-box">
-            <div class="element-title" id="q-name">載入中...</div>
-            <div class="question-text" id="q-text">準備好挑戰了嗎？</div>
+    <div class="container">
+        <div id="menu-screen" class="active">
+            <h1>🧪 元素挑戰賽</h1>
+            <p>請選擇挑戰等級：</p>
+            <button class="mode-btn" onclick="startGame('easy')">初級：前 20 號 (國中考點)</button>
+            <button class="mode-btn" onclick="startGame('normal')">中級：常見金屬與非金屬</button>
+            <button class="mode-btn" onclick="startGame('hard')">大師：全 118 元素挑戰</button>
         </div>
 
-        <div class="options">
-            <button class="btn" id="btn-0" onclick="checkAnswer(0)">?</button>
-            <button class="btn" id="btn-1" onclick="checkAnswer(1)">?</button>
+        <div id="game-screen">
+            <div class="progress-bar"><div id="progress-fill"></div></div>
+            <div class="question-box">
+                <div class="element-title" id="q-name">---</div>
+                <div class="question-text" id="q-text">載入中...</div>
+            </div>
+            <div class="options">
+                <button class="btn" id="btn-0" onclick="checkAnswer(0)">?</button>
+                <button class="btn" id="btn-1" onclick="checkAnswer(1)">?</button>
+            </div>
+            <div class="score-info">能量積分：<span id="score">0</span></div>
+            <button class="back-btn" onclick="showMenu()">回首頁</button>
         </div>
-
-        <div class="score-info">能量積分：<span id="score">0</span></div>
     </div>
 
     <script>
-        const bank = [
-            { name: "氫", q: "我是全宇宙最多的元素！太陽就是靠我發光發熱的喔。", a: "H", wrong: "He" },
-            { name: "氦", q: "吸了我聲音會變尖，派對氣球裡裝的就是我，我很安全。", a: "He", wrong: "H" },
-            { name: "鋰", q: "你的手機可以玩很久都靠我，我是電池裡的主角！", a: "Li", wrong: "Be" },
-            { name: "碳", q: "我可以是黑黑的鉛筆芯，也可以是亮晶晶的鑽石，神奇吧？", a: "C", wrong: "Ca" },
-            { name: "氮", q: "洋芋片包裝撐得大大的，裡面不是空氣，是保護食物的我！", a: "N", wrong: "Na" },
-            { name: "氧", q: "沒了我你只能活三分鐘。我就在你吸的每一口空氣裡。", a: "O", wrong: "Au" },
-            { name: "氟", q: "牙膏裡常看到我，我是保護牙齒不蛀牙的小尖兵。", a: "F", wrong: "Fe" },
-            { name: "氖", q: "晚上的招牌閃亮亮，那就是我被電到後發出的漂亮光芒。", a: "Ne", wrong: "N" },
-            { name: "鈉", q: "我很愛玩水，碰到水會爆炸！但我跟氯結合後就變成食鹽。", a: "Na", wrong: "Mg" },
-            { name: "鋁", q: "我很輕，鋁箔紙、易開罐都是我做的。", a: "Al", wrong: "Ag" },
-            { name: "鐵", q: "蓋房子需要我，你血液紅紅的顏色也是因為有我喔！", a: "Fe", wrong: "F" },
-            { name: "銅", q: "我的導電性很好，家裡的電線裡面通常都是我。", a: "Cu", wrong: "Ca" },
-            { name: "金", q: "我是最受歡迎的高貴金屬，閃閃發亮永遠不會生鏽。", a: "Au", wrong: "Ag" }
+        const allElements = [
+            { id: 1, name: "氫", sym: "H", q: "我是原子序 1 號，宇宙中最輕、含量最多的元素。", w: "He" },
+            { id: 2, name: "氦", sym: "He", q: "我是惰性氣體，常用來充填氣球，吸入後聲音會變尖。", w: "H" },
+            { id: 3, name: "鋰", sym: "Li", q: "我是最輕的金屬，現在手機的充電電池都要靠我。", w: "Be" },
+            { id: 4, name: "鈹", sym: "Be", q: "常見於綠寶石中，質地堅硬但非常輕的金屬。", w: "B" },
+            { id: 5, name: "硼", sym: "B", q: "主要用於耐熱玻璃與清潔劑中，是非金屬元素。", w: "Ba" },
+            { id: 6, name: "碳", sym: "C", q: "我是生命的基礎，可以是石墨也可以是鑽石。", w: "Ca" },
+            { id: 7, name: "氮", sym: "N", q: "空氣中含量最多的氣體，洋芋片包裝常用我來保鮮。", w: "Na" },
+            { id: 8, name: "氧", sym: "O", q: "生物呼吸必備，空氣中約佔 21%，支持燃燒。", w: "Os" },
+            { id: 9, sym: "F", name: "氟", q: "活性極強，牙膏裡添加我可以預防蛀牙。", w: "Fe" },
+            { id: 10, sym: "Ne", name: "氖", q: "通電後會發出紅光，常用在霓虹燈招牌。", w: "N" },
+            { id: 11, sym: "Na", name: "鈉", q: "鹼金屬，碰到水會劇烈反應，與氯結合變成食鹽。", w: "Mg" },
+            { id: 12, sym: "Mg", name: "鎂", q: "燃燒時發出強烈白光，常用於煙火或相機閃光燈。", w: "Mn" },
+            { id: 13, sym: "Al", name: "鋁", q: "地殼含量最多的金屬，質輕耐鏽，用於飲料罐。", w: "Au" },
+            { id: 14, sym: "Si", name: "矽", q: "半導體產業核心，也是砂石的主要成分。", w: "S" },
+            { id: 15, sym: "P", name: "磷", q: "存在於骨骼與 DNA 中，燃點低，常用於火柴。", w: "Pb" },
+            { id: 16, sym: "S", name: "硫", q: "黃色非金屬，常用於造紙、火藥，溫泉的味道來源。", w: "Si" },
+            { id: 17, sym: "Cl", name: "氯", q: "黃綠色毒氣，用於自來水消毒與游泳池殺菌。", w: "Cr" },
+            { id: 18, sym: "Ar", name: "氬", q: "空氣中含量最多的惰性氣體，常用於燈泡填充。", w: "Au" },
+            { id: 19, sym: "K", name: "鉀", q: "人體重要的電解質，常用於肥料，香蕉含量豐富。", w: "P" },
+            { id: 20, sym: "Ca", name: "鈣", q: "構成骨骼與牙齒的主角，大理石的主要成分。", w: "Cu" },
+            // 中級常用元素
+            { id: 26, sym: "Fe", name: "鐵", q: "地磁來源，血液中血紅素的核心，常用於建築。", w: "F" },
+            { id: 29, sym: "Cu", name: "銅", q: "導電性極佳，電線與硬幣的主要材質。", w: "Co" },
+            { id: 30, sym: "Zn", name: "鋅", q: "常與鐵製成合金防鏽，也是乾電池的負極。", w: "Sn" },
+            { id: 47, sym: "Ag", name: "銀", q: "導電導熱性最好的金屬，用於飾品與感光乳劑。", w: "Au" },
+            { id: 50, sym: "Sn", name: "錫", q: "常用於電路焊接（焊錫）與罐頭內襯（馬口鐵）。", w: "Sb" },
+            { id: 53, sym: "I", name: "碘", q: "紫黑色固體，常用於傷口消毒與甲狀腺健康。", w: "In" },
+            { id: 54, sym: "Xe", name: "氙", q: "惰性氣體，用於高亮度閃光燈或離子引擎。", w: "Sn" },
+            { id: 74, sym: "W", name: "鎢", q: "熔點最高的金屬，用於燈泡燈絲。", w: "Ti" },
+            { id: 78, sym: "Pt", name: "鉑", q: "又稱白金，化學性質極穩定，用於高級首飾。", w: "Pb" },
+            { id: 79, sym: "Au", name: "金", q: "最穩定的貴金屬，延展性世界第一。", w: "Ag" },
+            { id: 80, sym: "Hg", name: "汞", q: "常溫下唯一的液態金屬，俗稱水銀。", w: "Pb" },
+            { id: 82, sym: "Pb", name: "鉛", q: "密度大的重金屬，常用於防 X 光與電池。", w: "Pt" },
+            { id: 92, sym: "U", name: "鈾", q: "核能發電的重要原料。", w: "V" },
+            { id: 118, sym: "Og", name: "奧加涅松", q: "目前週期表的最後一格，原子序 118 號。", w: "On" }
         ];
 
-        let currentQuestion = 0;
-        let score = 0;
-        let canClick = true;
-
-        function loadQuestion() {
-            canClick = true;
-            const q = bank[currentQuestion];
-            document.getElementById('q-name').innerText = `【 ${q.name} 】`;
-            document.getElementById('q-text').innerText = q.q;
-            document.getElementById('progress-fill').style.width = ((currentQuestion + 1) / bank.length * 100) + "%";
-
-            const isSwapped = Math.random() > 0.5;
-            const btn0 = document.getElementById('btn-0');
-            const btn1 = document.getElementById('btn-1');
-            
-            btn0.className = 'btn';
-            btn1.className = 'btn';
-            
-            if (isSwapped) {
-                btn0.innerText = q.wrong; btn0.dataset.correct = "false";
-                btn1.innerText = q.a; btn1.dataset.correct = "true";
-            } else {
-                btn0.innerText = q.a; btn0.dataset.correct = "true";
-                btn1.innerText = q.wrong; btn1.dataset.correct = "false";
+        // 自動生成其餘 118 元素簡化版 (大師模式使用)
+        for(let i=21; i<=117; i++) {
+            if(!allElements.find(e => e.id === i)) {
+                allElements.push({ id: i, sym: "??", name: "元素", q: `${i} 號元素，等待探索的人造或稀有元素。`, w: "??" });
             }
         }
 
-        function checkAnswer(btnIdx) {
-            if (!canClick) return;
-            const btn = document.getElementById('btn-' + btnIdx);
-            const isCorrect = btn.dataset.correct === "true";
+        let gameQueue = [];
+        let currentIdx = 0;
+        let score = 0;
+        let canClick = true;
 
-            if (isCorrect) {
+        function startGame(mode) {
+            score = 0; currentIdx = 0;
+            document.getElementById('score').innerText = score;
+            
+            if (mode === 'easy') {
+                gameQueue = allElements.filter(e => e.id <= 20).sort(() => Math.random() - 0.5);
+            } else if (mode === 'normal') {
+                gameQueue = allElements.filter(e => e.id <= 30 || [47, 74, 79, 80, 82].includes(e.id)).sort(() => Math.random() - 0.5);
+            } else {
+                gameQueue = [...allElements].sort(() => Math.random() - 0.5);
+            }
+
+            document.getElementById('menu-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            canClick = true;
+            const q = gameQueue[currentIdx];
+            document.getElementById('q-name').innerText = `【 ${q.name} 】`;
+            document.getElementById('q-text').innerText = q.q;
+            document.getElementById('progress-fill').style.width = ((currentIdx + 1) / gameQueue.length * 100) + "%";
+
+            const isSwapped = Math.random() > 0.5;
+            const b0 = document.getElementById('btn-0');
+            const b1 = document.getElementById('btn-1');
+            b0.className = b1.className = 'btn';
+            
+            if (isSwapped) {
+                b0.innerText = q.w; b0.dataset.ok = "0";
+                b1.innerText = q.sym; b1.dataset.ok = "1";
+            } else {
+                b0.innerText = q.sym; b0.dataset.ok = "1";
+                b1.innerText = q.w; b1.dataset.ok = "0";
+            }
+        }
+
+        function checkAnswer(idx) {
+            if (!canClick) return;
+            const btn = document.getElementById('btn-' + idx);
+            if (btn.dataset.ok === "1") {
                 btn.classList.add('correct');
                 score += 100;
                 document.getElementById('score').innerText = score;
                 canClick = false;
                 setTimeout(() => {
-                    currentQuestion++;
-                    if (currentQuestion < bank.length) {
-                        loadQuestion();
-                    } else {
-                        alert("🎉 恭喜完成星際挑戰！總積分：" + score);
-                        currentQuestion = 0; score = 0;
-                        document.getElementById('score').innerText = score;
-                        loadQuestion();
-                    }
+                    currentIdx++;
+                    if (currentIdx < gameQueue.length) loadQuestion();
+                    else alert("挑戰完成！總分：" + score);
                 }, 800);
             } else {
                 btn.classList.add('wrong');
                 canClick = false;
-                setTimeout(() => {
-                    btn.classList.remove('wrong');
-                    canClick = true;
-                }, 500);
+                setTimeout(() => { btn.classList.remove('wrong'); canClick = true; }, 500);
             }
         }
 
-        loadQuestion();
+        function showMenu() {
+            document.getElementById('game-screen').classList.remove('active');
+            document.getElementById('menu-screen').classList.add('active');
+        }
     </script>
 </body>
 </html>
