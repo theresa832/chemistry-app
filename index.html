@@ -3,133 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>國中化學元素聯想記憶 App</title>
+    <title>國中化學元素快速記憶卡</title>
     <style>
-        :root {
-            --primary: #4a90e2;
-            --secondary: #f39c12;
-            --bg: #f0f2f5;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        h1 { color: #2c3e50; margin-bottom: 10px; }
-        .score-board { font-size: 1.2rem; margin-bottom: 20px; color: #34495e; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; width: 100%; max-width: 600px; }
-        .card { height: 160px; background: white; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; border: 2px solid transparent; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
-        .card.flipped { border-color: var(--primary); background: #eef6ff; }
-        .card .symbol { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
-        .card .name { font-size: 1.2rem; color: #333; margin-top: 5px; }
-        .card .hint-img { font-size: 2.5rem; margin-bottom: 10px; }
-        .card .hint-text { font-size: 1rem; color: #666; font-weight: bold; }
-        .hidden { display: none; }
-        button { margin-top: 30px; padding: 10px 25px; font-size: 1rem; background: var(--primary); color: white; border: none; border-radius: 25px; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #357abd; }
-        .match-success { animation: pulse 0.5s; background: #d4edda !important; border-color: #28a745 !important; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card-container { perspective: 1000px; width: 300px; height: 400px; cursor: pointer; margin-top: 50px; }
+        .card { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; box-shadow: 0 10px 20px rgba(0,0,0,0.2); border-radius: 20px; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; border: 5px solid white; }
+        .card-front { background: #4a90e2; color: white; }
+        .card-back { background: #ffffff; color: #333; transform: rotateY(180deg); }
+        .symbol { font-size: 80px; font-weight: bold; }
+        .number { position: absolute; top: 20px; left: 20px; font-size: 24px; opacity: 0.8; }
+        .name { font-size: 48px; font-weight: bold; color: #2c3e50; }
+        .hint { font-size: 24px; color: #e67e22; margin-top: 10px; }
+        .img-icon { font-size: 60px; margin-bottom: 10px; }
+        .controls { margin-top: 40px; display: flex; gap: 20px; }
+        button { padding: 15px 30px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; background: #2c3e50; color: white; transition: 0.2s; }
+        button:hover { background: #34495e; transform: scale(1.05); }
+        p { color: #666; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <h1>🧪 元素聯想記憶卡</h1>
-    <div class="score-board">配對成功: <span id="score">0</span> / 5</div>
+    <h1>🧪 元素記憶閃卡</h1>
+    <p>點擊卡片翻面，下方切換下一個</p>
 
-    <div class="grid" id="gameGrid">
+    <div class="card-container" onclick="flipCard()">
+        <div class="card" id="card">
+            <div class="card-face card-front">
+                <div class="number" id="cardNum">1</div>
+                <div class="symbol" id="cardSymbol">H</div>
+                <div style="margin-top:20px;">點擊看答案</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="img-icon" id="cardImg">☀️</div>
+                <div class="name" id="cardName">氫</div>
+                <div class="hint" id="cardHint">太陽的燃料</div>
+            </div>
         </div>
+    </div>
 
-    <button onclick="resetGame()">重新開始</button>
+    <div class="controls">
+        <button onclick="prevCard()">上一個</button>
+        <button onclick="nextCard()">下一個</button>
+        <button onclick="shuffleCards()">隨機抽測</button>
+    </div>
 
     <script>
-        // 設定元素資料（你可以自行增加更多）
         const elements = [
-            { id: 1, symbol: 'H', name: '氫', hint: '太陽燃料', img: '☀️' },
+            { id: 1, symbol: 'H', name: '氫', hint: '太陽的燃料', img: '☀️' },
             { id: 2, symbol: 'He', name: '氦', hint: '派對氣球', img: '🎈' },
-            { id: 3, symbol: 'Li', name: '鋰', hint: '手機電池', img: '🔋' },
-            { id: 4, symbol: 'C', name: '碳', hint: '鑽石鉛筆', img: '💎' },
-            { id: 5, symbol: 'O', name: '氧', hint: '呼吸生存', img: '🌬️' }
+            { id: 6, symbol: 'C', name: '碳', hint: '鑽石與鉛筆', img: '💎' },
+            { id: 7, symbol: 'N', name: '氮', hint: '零食包裝充氣', img: '🍟' },
+            { id: 8, symbol: 'O', name: '氧', hint: '呼吸生存', img: '🌬️' },
+            { id: 10, symbol: 'Ne', name: '氖', hint: '霓虹燈廣告', img: '💡' },
+            { id: 11, symbol: 'Na', name: '鈉', hint: '食鹽的主要成分', img: '🧂' },
+            { id: 13, symbol: 'Al', name: '鋁', hint: '鋁箔紙、易開罐', img: '🥤' },
+            { id: 26, symbol: 'Fe', name: '鐵', hint: '鋼鐵建築、血液', img: '🏗️' },
+            { id: 29, symbol: 'Cu', name: '銅', hint: '電線、硬幣', img: '⚡' },
+            { id: 79, symbol: 'Au', name: '金', hint: '昂貴的首飾', img: '💍' }
         ];
 
-        let cards = [];
-        let flippedCards = [];
-        let matchedCount = 0;
+        let currentIndex = 0;
+        const card = document.getElementById('card');
 
-        function initGame() {
-            const grid = document.getElementById('gameGrid');
-            grid.innerHTML = '';
-            matchedCount = 0;
-            document.getElementById('score').innerText = matchedCount;
-            
-            // 建立符號卡與提示卡
-            let deck = [
-                ...elements.map(e => ({ ...e, type: 'symbol' })),
-                ...elements.map(e => ({ ...e, type: 'hint' }))
-            ];
-            
-            // 洗牌
-            deck.sort(() => Math.random() - 0.5);
-
-            deck.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.id = item.id;
-                card.dataset.index = index;
-                
-                // 初始顯示問號
-                card.innerHTML = `<div class="symbol">?</div>`;
-                
-                card.onclick = () => flipCard(card, item);
-                grid.appendChild(card);
-                cards.push({ card, item });
-            });
+        function updateCard() {
+            card.classList.remove('is-flipped');
+            setTimeout(() => {
+                const el = elements[currentIndex];
+                document.getElementById('cardNum').innerText = el.id;
+                document.getElementById('cardSymbol').innerText = el.symbol;
+                document.getElementById('cardName').innerText = el.name;
+                document.getElementById('cardHint').innerText = el.hint;
+                document.getElementById('cardImg').innerText = el.img;
+            }, 150);
         }
 
-        function flipCard(cardElement, data) {
-            if (flippedCards.length === 2 || cardElement.classList.contains('flipped') || cardElement.classList.contains('match-success')) return;
+        function flipCard() { card.classList.toggle('is-flipped'); }
+        function nextCard() { currentIndex = (currentIndex + 1) % elements.length; updateCard(); }
+        function prevCard() { currentIndex = (currentIndex - 1 + elements.length) % elements.length; updateCard(); }
+        function shuffleCards() { elements.sort(() => Math.random() - 0.5); currentIndex = 0; updateCard(); }
 
-            cardElement.classList.add('flipped');
-            if (data.type === 'symbol') {
-                cardElement.innerHTML = `<div class="symbol">${data.symbol}</div><div class="name">${data.name}</div>`;
-            } else {
-                cardElement.innerHTML = `<div class="hint-img">${data.img}</div><div class="hint-text">${data.hint}</div>`;
-            }
-
-            flippedCards.push({ element: cardElement, data: data });
-
-            if (flippedCards.length === 2) {
-                checkMatch();
-            }
-        }
-
-        function checkMatch() {
-            const [c1, c2] = flippedCards;
-            if (c1.data.id === c2.data.id && c1.data.type !== c2.data.type) {
-                // 配對成功
-                setTimeout(() => {
-                    c1.element.classList.add('match-success');
-                    c2.element.classList.app('match-success');
-                    matchedCount++;
-                    document.getElementById('score').innerText = matchedCount;
-                    flippedCards = [];
-                    if (matchedCount === elements.length) alert('太棒了！你全部記住了！');
-                }, 300);
-            } else {
-                // 配對失敗，翻回去
-                setTimeout(() => {
-                    c1.element.classList.remove('flipped');
-                    c2.element.classList.remove('flipped');
-                    c1.element.innerHTML = `<div class="symbol">?</div>`;
-                    c2.element.innerHTML = `<div class="symbol">?</div>`;
-                    flippedCards = [];
-                }, 1000);
-            }
-        }
-
-        function resetGame() {
-            cards = [];
-            flippedCards = [];
-            initGame();
-        }
-
-        initGame();
+        updateCard();
     </script>
 </body>
 </html>
