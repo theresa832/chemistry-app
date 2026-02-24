@@ -3,88 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>國中化學元素快速記憶卡</title>
+    <title>元素探索博物館</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card-container { perspective: 1000px; width: 300px; height: 400px; cursor: pointer; margin-top: 50px; }
-        .card { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; box-shadow: 0 10px 20px rgba(0,0,0,0.2); border-radius: 20px; }
-        .card.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; border: 5px solid white; }
-        .card-front { background: #4a90e2; color: white; }
-        .card-back { background: #ffffff; color: #333; transform: rotateY(180deg); }
-        .symbol { font-size: 80px; font-weight: bold; }
-        .number { position: absolute; top: 20px; left: 20px; font-size: 24px; opacity: 0.8; }
-        .name { font-size: 48px; font-weight: bold; color: #2c3e50; }
-        .hint { font-size: 24px; color: #e67e22; margin-top: 10px; }
-        .img-icon { font-size: 60px; margin-bottom: 10px; }
-        .controls { margin-top: 40px; display: flex; gap: 20px; }
-        button { padding: 15px 30px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; background: #2c3e50; color: white; transition: 0.2s; }
-        button:hover { background: #34495e; transform: scale(1.05); }
-        p { color: #666; margin-top: 20px; }
+        :root { --main-bg: #1a1a2e; --card-bg: #16213e; --accent: #4ecca3; }
+        body { font-family: 'PingFang TC', sans-serif; background: var(--main-bg); color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { margin-bottom: 5px; color: var(--accent); }
+        .subtitle { margin-bottom: 30px; opacity: 0.8; }
+        
+        /* 元素網格 */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; width: 100%; max-width: 800px; }
+        .element-box { aspect-ratio: 1/1; background: var(--card-bg); border: 1px solid #0f3460; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .element-box:hover { transform: scale(1.1); border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
+        .num { font-size: 10px; position: absolute; top: 5px; left: 5px; opacity: 0.6; }
+        .sym { font-size: 24px; font-weight: bold; }
+        .name-ch { font-size: 14px; margin-top: 2px; }
+
+        /* 彈出資訊視窗 */
+        #info-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: white; color: #333; padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 100; text-align: center; }
+        #info-panel h2 { font-size: 60px; margin: 0; color: var(--main-bg); }
+        #info-panel .ch-name { font-size: 30px; font-weight: bold; margin-bottom: 10px; }
+        #info-panel .story { font-size: 18px; line-height: 1.6; background: #f0f2f5; padding: 15px; border-radius: 10px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 50; }
+        .close-btn { margin-top: 20px; padding: 10px 20px; background: var(--main-bg); color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h1>🧪 元素記憶閃卡</h1>
-    <p>點擊卡片翻面，下方切換下一個</p>
+    <h1>🧪 元素博物館</h1>
+    <p class="subtitle">點擊方塊，探索元素的秘密生活</p>
 
-    <div class="card-container" onclick="flipCard()">
-        <div class="card" id="card">
-            <div class="card-face card-front">
-                <div class="number" id="cardNum">1</div>
-                <div class="symbol" id="cardSymbol">H</div>
-                <div style="margin-top:20px;">點擊看答案</div>
-            </div>
-            <div class="card-face card-back">
-                <div class="img-icon" id="cardImg">☀️</div>
-                <div class="name" id="cardName">氫</div>
-                <div class="hint" id="cardHint">太陽的燃料</div>
-            </div>
-        </div>
-    </div>
+    <div class="grid" id="elementGrid"></div>
 
-    <div class="controls">
-        <button onclick="prevCard()">上一個</button>
-        <button onclick="nextCard()">下一個</button>
-        <button onclick="shuffleCards()">隨機抽測</button>
+    <div class="overlay" id="overlay" onclick="closePanel()"></div>
+    <div id="info-panel">
+        <h2 id="p-sym">H</h2>
+        <div class="ch-name" id="p-name">氫</div>
+        <div class="story" id="p-story">我是全宇宙最多的元素！太陽就是靠我發光發熱的喔。</div>
+        <button class="close-btn" onclick="closePanel()">我記住了</button>
     </div>
 
     <script>
         const elements = [
-            { id: 1, symbol: 'H', name: '氫', hint: '太陽的燃料', img: '☀️' },
-            { id: 2, symbol: 'He', name: '氦', hint: '派對氣球', img: '🎈' },
-            { id: 6, symbol: 'C', name: '碳', hint: '鑽石與鉛筆', img: '💎' },
-            { id: 7, symbol: 'N', name: '氮', hint: '零食包裝充氣', img: '🍟' },
-            { id: 8, symbol: 'O', name: '氧', hint: '呼吸生存', img: '🌬️' },
-            { id: 10, symbol: 'Ne', name: '氖', hint: '霓虹燈廣告', img: '💡' },
-            { id: 11, symbol: 'Na', name: '鈉', hint: '食鹽的主要成分', img: '🧂' },
-            { id: 13, symbol: 'Al', name: '鋁', hint: '鋁箔紙、易開罐', img: '🥤' },
-            { id: 26, symbol: 'Fe', name: '鐵', hint: '鋼鐵建築、血液', img: '🏗️' },
-            { id: 29, symbol: 'Cu', name: '銅', hint: '電線、硬幣', img: '⚡' },
-            { id: 79, symbol: 'Au', name: '金', hint: '昂貴的首飾', img: '💍' }
+            { id: 1, sym: 'H', name: '氫', story: '我是宇宙第一名！太陽公公每天都在燃燒我來產生能量。' },
+            { id: 2, sym: 'He', name: '氦', story: '吸了我聲音會變尖，派對氣球裡裝的就是我，我很安全。' },
+            { id: 3, sym: 'Li', name: '鋰', story: '你的手機可以玩很久都靠我，我是電池裡的主角！' },
+            { id: 6, sym: 'C', name: '碳', story: '我可以是黑黑的鉛筆芯，也可以是亮晶晶的鑽石，神奇吧？' },
+            { id: 7, sym: 'N', name: '氮', story: '洋芋片包裝撐得大大的，裡面不是空氣，是保護食物的我！' },
+            { id: 8, sym: 'O', name: '氧', story: '沒了我你只能活三分鐘。我就在你吸的每一口空氣裡。' },
+            { id: 9, sym: 'F', name: '氟', story: '牙膏裡常看到我，我是保護牙齒不蛀牙的小尖兵。' },
+            { id: 10, sym: 'Ne', name: '氖', story: '晚上的招牌閃亮亮，那就是我被電到後發出的漂亮光芒。' },
+            { id: 11, sym: 'Na', name: '鈉', story: '我很愛玩水，碰到水會爆炸！但我跟氯結合後就變成食鹽。' },
+            { id: 13, sym: 'Al', name: '鋁', story: '我很輕，鋁箔紙、易開罐都是我做的。' },
+            { id: 26, sym: 'Fe', name: '鐵', story: '蓋房子需要我，你血液紅紅的顏色也是因為有我喔！' }
         ];
 
-        let currentIndex = 0;
-        const card = document.getElementById('card');
+        const grid = document.getElementById('elementGrid');
+        elements.forEach(el => {
+            const box = document.createElement('div');
+            box.className = 'element-box';
+            box.innerHTML = `<div class="num">${el.id}</div><div class="sym">${el.sym}</div><div class="name-ch">${el.name}</div>`;
+            box.onclick = () => showInfo(el);
+            grid.appendChild(box);
+        });
 
-        function updateCard() {
-            card.classList.remove('is-flipped');
-            setTimeout(() => {
-                const el = elements[currentIndex];
-                document.getElementById('cardNum').innerText = el.id;
-                document.getElementById('cardSymbol').innerText = el.symbol;
-                document.getElementById('cardName').innerText = el.name;
-                document.getElementById('cardHint').innerText = el.hint;
-                document.getElementById('cardImg').innerText = el.img;
-            }, 150);
+        function showInfo(el) {
+            document.getElementById('p-sym').innerText = el.sym;
+            document.getElementById('p-name').innerText = el.name;
+            document.getElementById('p-story').innerText = el.story;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('info-panel').style.display = 'block';
         }
 
-        function flipCard() { card.classList.toggle('is-flipped'); }
-        function nextCard() { currentIndex = (currentIndex + 1) % elements.length; updateCard(); }
-        function prevCard() { currentIndex = (currentIndex - 1 + elements.length) % elements.length; updateCard(); }
-        function shuffleCards() { elements.sort(() => Math.random() - 0.5); currentIndex = 0; updateCard(); }
-
-        updateCard();
+        function closePanel() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('info-panel').style.display = 'none';
+        }
     </script>
 </body>
 </html>
