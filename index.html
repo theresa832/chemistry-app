@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中化學元素聯想記憶 App</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #f39c12;
+            --bg: #f0f2f5;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        .score-board { font-size: 1.2rem; margin-bottom: 20px; color: #34495e; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; width: 100%; max-width: 600px; }
+        .card { height: 160px; background: white; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; border: 2px solid transparent; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
+        .card.flipped { border-color: var(--primary); background: #eef6ff; }
+        .card .symbol { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
+        .card .name { font-size: 1.2rem; color: #333; margin-top: 5px; }
+        .card .hint-img { font-size: 2.5rem; margin-bottom: 10px; }
+        .card .hint-text { font-size: 1rem; color: #666; font-weight: bold; }
+        .hidden { display: none; }
+        button { margin-top: 30px; padding: 10px 25px; font-size: 1rem; background: var(--primary); color: white; border: none; border-radius: 25px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #357abd; }
+        .match-success { animation: pulse 0.5s; background: #d4edda !important; border-color: #28a745 !important; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <h1>🧪 元素聯想記憶卡</h1>
+    <div class="score-board">配對成功: <span id="score">0</span> / 5</div>
+
+    <div class="grid" id="gameGrid">
+        </div>
+
+    <button onclick="resetGame()">重新開始</button>
+
+    <script>
+        // 設定元素資料（你可以自行增加更多）
+        const elements = [
+            { id: 1, symbol: 'H', name: '氫', hint: '太陽燃料', img: '☀️' },
+            { id: 2, symbol: 'He', name: '氦', hint: '派對氣球', img: '🎈' },
+            { id: 3, symbol: 'Li', name: '鋰', hint: '手機電池', img: '🔋' },
+            { id: 4, symbol: 'C', name: '碳', hint: '鑽石鉛筆', img: '💎' },
+            { id: 5, symbol: 'O', name: '氧', hint: '呼吸生存', img: '🌬️' }
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedCount = 0;
+
+        function initGame() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            matchedCount = 0;
+            document.getElementById('score').innerText = matchedCount;
+            
+            // 建立符號卡與提示卡
+            let deck = [
+                ...elements.map(e => ({ ...e, type: 'symbol' })),
+                ...elements.map(e => ({ ...e, type: 'hint' }))
+            ];
+            
+            // 洗牌
+            deck.sort(() => Math.random() - 0.5);
+
+            deck.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.id = item.id;
+                card.dataset.index = index;
+                
+                // 初始顯示問號
+                card.innerHTML = `<div class="symbol">?</div>`;
+                
+                card.onclick = () => flipCard(card, item);
+                grid.appendChild(card);
+                cards.push({ card, item });
+            });
+        }
+
+        function flipCard(cardElement, data) {
+            if (flippedCards.length === 2 || cardElement.classList.contains('flipped') || cardElement.classList.contains('match-success')) return;
+
+            cardElement.classList.add('flipped');
+            if (data.type === 'symbol') {
+                cardElement.innerHTML = `<div class="symbol">${data.symbol}</div><div class="name">${data.name}</div>`;
+            } else {
+                cardElement.innerHTML = `<div class="hint-img">${data.img}</div><div class="hint-text">${data.hint}</div>`;
+            }
+
+            flippedCards.push({ element: cardElement, data: data });
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [c1, c2] = flippedCards;
+            if (c1.data.id === c2.data.id && c1.data.type !== c2.data.type) {
+                // 配對成功
+                setTimeout(() => {
+                    c1.element.classList.add('match-success');
+                    c2.element.classList.app('match-success');
+                    matchedCount++;
+                    document.getElementById('score').innerText = matchedCount;
+                    flippedCards = [];
+                    if (matchedCount === elements.length) alert('太棒了！你全部記住了！');
+                }, 300);
+            } else {
+                // 配對失敗，翻回去
+                setTimeout(() => {
+                    c1.element.classList.remove('flipped');
+                    c2.element.classList.remove('flipped');
+                    c1.element.innerHTML = `<div class="symbol">?</div>`;
+                    c2.element.innerHTML = `<div class="symbol">?</div>`;
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        function resetGame() {
+            cards = [];
+            flippedCards = [];
+            initGame();
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
